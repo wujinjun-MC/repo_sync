@@ -55,12 +55,14 @@ jobs:
       - name: Remote debug
         if: env.CPOLAR == 'debug'
         shell: bash
-        run: bash ${GITHUB_WORKSPACE}/debug-via-reverse-proxy.sh nonblock
+        run: |
+          bash ${GITHUB_WORKSPACE}/debug-via-reverse-proxy.sh nonblock
+          sudo apt install -y nethogs ncdu btop htop # Install some useful tools
       
       - name: Check Server Performance
         run: |
           echo "警告⚠"
-          echo "分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
+          echo "分配的服务器性能有限，若需要编译的内核或系统过大，务必注意CPU性能！"
           echo -e "已知CPU型号(降序): 7763，8370C，8272CL，8171M，E5-2673\n"
           echo "--------------------------CPU信息--------------------------"
           echo "CPU物理数量: $(cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)"
@@ -76,7 +78,7 @@ jobs:
         uses: easimon/maximize-build-space@master
         with:
           build-mount-path: /home/runner/repo_sync
-          root-reserve-mb: 10240
+          root-reserve-mb: 5120
           temp-reserve-mb: 2048
           swap-size-mb: 4096
 
@@ -84,10 +86,10 @@ jobs:
         run: |
           df -h
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
+      # - name: Set up Python
+      #   uses: actions/setup-python@v5
+      #   with:
+      #     python-version: '3.x'
 
       - name: Install repo
         run: sudo apt install -y repo
