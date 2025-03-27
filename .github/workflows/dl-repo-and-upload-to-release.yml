@@ -24,7 +24,7 @@ on:
         default: 1G
         type: string
       debug_or_make_config_via_reverse_proxy_ssh:
-        description: "debug or mkconf shell"
+        description: "debug or mkconf shell(ssh username: runner)"
         default: "debug"
         type: choice
         options:
@@ -154,3 +154,12 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: /home/runner/repo_sync/artifacts.tar.gz.*
           asset_name: ${{ github.workflow }}-${{ github.run_number }}-$
+
+      - name: Wait for Remote Debug Exit if Failure
+        if: failure() && env.CPOLAR != 'none' && !cancelled()
+        shell: bash
+        run: |
+          while pgrep cpolar
+          do
+            sleep 10
+          done
