@@ -115,6 +115,10 @@ jobs:
         working-directory: /home/runner/repo_sync
         run: |
           tmux new-session -ds repo-sync .repo/repo/repo sync -j16
+          while tmux has-session -t repo-sync
+          do
+            sleep 10
+          done
 
       - name: Print disk usage after repo sync
         working-directory: /home/runner/repo_sync
