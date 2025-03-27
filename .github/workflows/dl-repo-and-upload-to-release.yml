@@ -70,11 +70,11 @@ jobs:
         working-directory: ${{ github.workspace }} # Start from the workflow workspace
 
       - name: Repo init
-        run: repo-2 init -u https://github.com/OnePlusOSS/kernel_manifest -b oneplus/sm8650 -m oneplus12_u.xml
+        run: repo init -u https://github.com/OnePlusOSS/kernel_manifest -b oneplus/sm8650 -m oneplus12_u.xml
         working-directory: /home/runner/repo_sync
 
       - name: Repo sync
-        run: repo-2 sync -j8
+        run: repo sync -j8
         working-directory: /home/runner/repo_sync
 
       # - name: Create archive
