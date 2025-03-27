@@ -1,4 +1,4 @@
-name: Download oneplus 12 kernel
+name: Repo sync and upload archive to release
 
 on:
   workflow_dispatch:
@@ -18,15 +18,41 @@ on:
         required: true
         default: oneplus12_u.xml
         type: string
+      split_size:
+        description: Size per split
+        required: true
+        default: 1G
+        type: string
+      debug_or_make_config_via_reverse_proxy_ssh:
+        description: "debug or mkconf shell"
+        default: "debug"
+        type: choice
+        options:
+          - none
+          - debug
+          - mkconf
   # push:
   #   branches: [ "main" ]
+
+env:
+  INIT_URL: ${{ inputs.init_url || 'https://github.com/OnePlusOSS/kernel_manifest' }}
+  BRANCH: ${{ inputs.branch || 'oneplus/sm8650' }}
+  MANIFEST: ${{ inputs.manifest || 'oneplus12_u.xml' }}
+  SPLIT_SIZE: ${{ inputs.split_size || '1G' }}
+  CPOLAR: ${{ inputs.debug_or_make_config_via_reverse_proxy_ssh || 'debug' }}
+
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # - name: Checkout code (optional, if your workflow needs access to the current repo)
-      #   uses: actions/checkout@v4
+      - name: Checkout code (optional, if your workflow needs access to the current repo)
+        uses: actions/checkout@v4
+
+      - name: Remote debug
+        if: env.CPOLAR == 'debug'
+        shell: bash
+        run: bash ${GITHUB_WORKSPACE}/debug-via-reverse-proxy.sh nonblock
       
       - name: Check Server Performance
         run: |
@@ -70,12 +96,24 @@ jobs:
         working-directory: ${{ github.workspace }} # Start from the workflow workspace
 
       - name: Repo init
-        run: repo init -u https://github.com/OnePlusOSS/kernel_manifest -b oneplus/sm8650 -m oneplus12_u.xml
+        run: repo init -u ${{ env.INIT_URL }} -b ${{ env.BRANCH }} -m ${{ env.MANIFEST }}
         working-directory: /home/runner/repo_sync
+
+      # - name: Remote make menuconfig
+      #   if: env.CPOLAR == 'mkconf'
+      #   # working-directory: /workdir/openwrt
+      #   shell: bash
+      #   run: |
+      #     bash ${GITHUB_WORKSPACE}/debug-via-reverse-proxy.sh
 
       - name: Repo sync
         run: .repo/repo/repo sync -j8
         working-directory: /home/runner/repo_sync
+
+      - name: Print disk usage after repo sync
+        if: steps.compile.outputs.status == 'success' && !cancelled()
+        run: |
+          df -h
 
       # - name: Create archive
       #   run: tar -czvf artifacts.tar.gz --exclude=.git --exclude=.repo * .??*
@@ -87,8 +125,13 @@ jobs:
 
       - name: Create and Split archive
         # run: tar -czvf - --exclude=.git --exclude=.repo * .??* | split -b 1G artifacts.tar.gz.
-        run: tar -czvf - * .??* | split -b 1G artifacts.tar.gz.
+        run: tar -czvf - * .??* | split -b ${{ env.SPLIT_SIZE }} artifacts.tar.gz.
         working-directory: /home/runner/repo_sync
+
+      - name: Print disk usage after archiving
+        if: steps.compile.outputs.status == 'success' && !cancelled()
+        run: |
+          df -h
 
       - name: Create Release
         id: create_release
