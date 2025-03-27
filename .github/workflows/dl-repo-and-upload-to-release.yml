@@ -1,0 +1,83 @@
+name: Download oneplus 12 kernel
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code (optional, if your workflow needs access to the current repo)
+        uses: actions/checkout@v4
+      
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install repo
+        run: pip install --user --upgrade git+https://gerrit.googlesource.com/git-repo
+
+      - name: Make and change directory
+        run: |
+          mkdir -p ~/repo_sync
+          cd ~/repo_sync
+        working-directory: ${{ github.workspace }} # Start from the workflow workspace
+
+      - name: Repo init
+        run: repo init -u https://github.com/OnePlusOSS/kernel_manifest -b oneplus/sm8650 -m oneplus12_u.xml
+        working-directory: ~/repo_sync
+
+      - name: Repo sync
+        run: repo sync -j8
+        working-directory: ~/repo_sync
+
+      # - name: Create archive
+      #   run: tar -czvf artifacts.tar.gz --exclude=.git --exclude=.repo * .??*
+      #   working-directory: ~/repo_sync
+
+      # - name: Split archive
+      #   run: split -b 1G artifacts.tar.gz artifacts.tar.gz.
+      #   working-directory: ~/repo_sync
+
+      - name: Create and Split archive
+        run: tar -czvf - --exclude=.git --exclude=.repo * .??* | split -b 1G artifacts.tar.gz.
+        working-directory: ~/repo_sync
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: artifacts-${{ github.run_number }}
+          release_name: artifacts
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ~/repo_sync/artifacts.tar.gz.*
+          asset_name: ${{ github.workflow }}-${{ github.run_number }}-$
