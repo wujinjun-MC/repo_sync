@@ -39,6 +39,7 @@ env:
   BRANCH: ${{ inputs.branch || 'oneplus/sm8650' }}
   MANIFEST: ${{ inputs.manifest || 'oneplus12_u.xml' }}
   SPLIT_SIZE: ${{ inputs.split_size || '1G' }}
+  MY_REVERSE_PROXY_TOKEN: ${{ secrets.REVERSE_PROXY_TOKEN || 'none' }}
   CPOLAR: ${{ inputs.debug_or_make_config_via_reverse_proxy_ssh || 'debug' }}
 
 
