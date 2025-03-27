@@ -9,7 +9,7 @@ then
 fi
 mkdir -p ~/.ssh
 echo "$MY_SSH_PUB_KEY" >> ~/.ssh/authorized_keys
-echo "$MY_SSH_PUB_KEY" >> ${GITHUB_WORKSPACE}/.ssh/authorized_keys
+sudo systemctl restart ssh
 echo "Starting tunnel..."
 env > ~/current_env.txt
 cpolar authtoken "$MY_REVERSE_PROXY_TOKEN"
