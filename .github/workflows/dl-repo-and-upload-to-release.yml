@@ -113,7 +113,6 @@ jobs:
         working-directory: /home/runner/repo_sync
 
       - name: Print disk usage after repo sync
-        if: !cancelled()
         working-directory: /home/runner/repo_sync
         run: |
           df -h
