@@ -1,3 +1,4 @@
+whoami
 # cd /tmp
 # wget -q https://www.cpolar.com/static/downloads/releases/3.3.18/cpolar-stable-linux-amd64.zip -O cpolar.zip && unzip cpolar.zip
 if ! which cpolar
