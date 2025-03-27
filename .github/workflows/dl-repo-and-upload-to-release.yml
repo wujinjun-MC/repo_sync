@@ -131,7 +131,9 @@ jobs:
       - name: Create and Split archive
         # run: tar -czvf - --exclude=.git --exclude=.repo * .??* | split -b 1G artifacts.tar.gz.
         # run: tar --remove-files -czvf - * .??* 2>/home/runner/repo_sync-tar.log | split -b ${{ env.SPLIT_SIZE }} --numeric-suffixes=1 - artifacts.tar.gz.
-        run: tar --remove-files -czvf - --exclude=.git --exclude=.repo * .??* 2>/home/runner/repo_sync-tar.log | split -b ${{ env.SPLIT_SIZE }} --numeric-suffixes=1 - artifacts.tar.gz.
+        # run: tar --remove-files -czvf - --exclude=.git --exclude=.repo * .??* 2>/home/runner/repo_sync-tar.log | split -b ${{ env.SPLIT_SIZE }} --numeric-suffixes=1 - artifacts.tar.gz.
+        run: tar --remove-files -czvf - --exclude=.git --exclude=.repo * .??* 2>/home/runner/repo_sync-tar.log | split -b ${{ env.SPLIT_SIZE }} --numeric-suffixes=1 --filter='tee >(md5sum > $FILE.md5) > $FILE' - artifacts.tar.gz.
+
         working-directory: /home/runner/repo_sync
 
       - name: Print disk usage after archiving
@@ -147,25 +149,36 @@ jobs:
             sleep 10
           done
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      # - name: Create Release
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: artifacts-${{ github.run_number }}
+      #     release_name: artifacts
+      #     draft: false
+      #     prerelease: false
+
+      - name: Upload Artifacts to Release
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: artifacts-${{ github.run_number }}
-          release_name: artifacts
-          draft: false
-          prerelease: false
+          # name: artifacts
+          files: /home/runner/repo_sync/artifacts.tar.gz.*
+          generate_release_notes: false # 如果你不希望自动生成发布说明，可以设置为 false
 
-      - name: Upload Release Assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: /home/runner/repo_sync/artifacts.tar.gz.*
-          asset_name: ${{ github.workflow }}-${{ github.run_number }}-$
+
+      # - name: Upload Release Assets
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: /home/runner/repo_sync/artifacts.tar.gz.*
+      #     asset_name: ${{ github.workflow }}-${{ github.run_number }}-$
 
       - name: Wait for Remote Debug Exit if One or More Previous Step Failure
         if: failure() && env.CPOLAR != 'none' && !cancelled()
