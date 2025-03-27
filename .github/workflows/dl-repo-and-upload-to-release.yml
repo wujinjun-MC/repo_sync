@@ -130,7 +130,7 @@ jobs:
 
       - name: Create and Split archive
         # run: tar -czvf - --exclude=.git --exclude=.repo * .??* | split -b 1G artifacts.tar.gz.
-        run: tar --remove-files -czvf - * .??* | split -b ${{ env.SPLIT_SIZE }} artifacts.tar.gz.
+        run: tar --remove-files -czvf - * .??* | split -b ${{ env.SPLIT_SIZE }} --numeric-suffixes=1 - artifacts.tar.gz.
         working-directory: /home/runner/repo_sync
 
       - name: Print disk usage after archiving
@@ -162,7 +162,7 @@ jobs:
         if: failure() && env.CPOLAR != 'none' && !cancelled()
         shell: bash
         run: |
-          while pgrep cpolar
+          while pgrep cpolar > /dev/null 2>&1
           do
             sleep 10
           done
