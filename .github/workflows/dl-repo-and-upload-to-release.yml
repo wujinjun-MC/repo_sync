@@ -1,17 +1,32 @@
 name: Download oneplus 12 kernel
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      init_url:
+        description: URL for repo init -u
+        required: true
+        default: "https://github.com/OnePlusOSS/kernel_manifest"
+        type: string
+      branch:
+        description: Branch to init
+        required: true
+        default: oneplus/sm8650
+        type: string
+      manifest:
+        description: Manifest
+        required: true
+        default: oneplus12_u.xml
+        type: string
+  # push:
+  #   branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code (optional, if your workflow needs access to the current repo)
-        uses: actions/checkout@v4
+      # - name: Checkout code (optional, if your workflow needs access to the current repo)
+      #   uses: actions/checkout@v4
       
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
@@ -38,29 +53,30 @@ jobs:
 
       - name: Make and change directory
         run: |
-          mkdir -p ~/repo_sync
-          cd ~/repo_sync
+          mkdir -p /home/runner/repo_sync
+          cd /home/runner/repo_sync
         working-directory: ${{ github.workspace }} # Start from the workflow workspace
 
       - name: Repo init
         run: repo init -u https://github.com/OnePlusOSS/kernel_manifest -b oneplus/sm8650 -m oneplus12_u.xml
-        working-directory: ~/repo_sync
+        working-directory: /home/runner/repo_sync
 
       - name: Repo sync
         run: repo sync -j8
-        working-directory: ~/repo_sync
+        working-directory: /home/runner/repo_sync
 
       # - name: Create archive
       #   run: tar -czvf artifacts.tar.gz --exclude=.git --exclude=.repo * .??*
-      #   working-directory: ~/repo_sync
+      #   working-directory: /home/runner/repo_sync
 
       # - name: Split archive
       #   run: split -b 1G artifacts.tar.gz artifacts.tar.gz.
-      #   working-directory: ~/repo_sync
+      #   working-directory: /home/runner/repo_sync
 
       - name: Create and Split archive
-        run: tar -czvf - --exclude=.git --exclude=.repo * .??* | split -b 1G artifacts.tar.gz.
-        working-directory: ~/repo_sync
+        # run: tar -czvf - --exclude=.git --exclude=.repo * .??* | split -b 1G artifacts.tar.gz.
+        run: tar -czvf - * .??* | split -b 1G artifacts.tar.gz.
+        working-directory: /home/runner/repo_sync
 
       - name: Create Release
         id: create_release
@@ -79,5 +95,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ~/repo_sync/artifacts.tar.gz.*
+          asset_path: /home/runner/repo_sync/artifacts.tar.gz.*
           asset_name: ${{ github.workflow }}-${{ github.run_number }}-$
