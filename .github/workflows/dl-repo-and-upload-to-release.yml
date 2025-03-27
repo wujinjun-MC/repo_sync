@@ -143,7 +143,8 @@ jobs:
         # run: tar -czvf - --exclude=.git --exclude=.repo * .??* | split -b 1G artifacts.tar.gz.
         # run: tar --remove-files -czvf - * .??* 2>/home/runner/repo_sync-tar.log | split -b ${{ env.SPLIT_SIZE }} --numeric-suffixes=1 - artifacts.tar.gz.
         # run: tar --remove-files -czvf - --exclude=.git --exclude=.repo * .??* 2>/home/runner/repo_sync-tar.log | split -b ${{ env.SPLIT_SIZE }} --numeric-suffixes=1 - artifacts.tar.gz.
-        run: tar --remove-files -czvf - --exclude=.git --exclude=.repo * .??* 2>/home/runner/repo_sync-tar.log | split -b ${{ env.SPLIT_SIZE }} --numeric-suffixes=1 --filter='tee >(md5sum > $FILE.md5) > $FILE' - artifacts.tar.gz.
+        # run: tar --remove-files -czvf - --exclude=.git --exclude=.repo * .??* 2>/home/runner/repo_sync-tar.log | split -b ${{ env.SPLIT_SIZE }} --numeric-suffixes=1 --filter='tee >(md5sum > $FILE.md5) > $FILE' - artifacts.tar.gz.
+        run: bash ${GITHUB_WORKSPACE}/tar-and-split-command.sh
 
         working-directory: /home/runner/repo_sync
 
