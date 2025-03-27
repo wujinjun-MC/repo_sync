@@ -112,8 +112,9 @@ jobs:
       #     bash ${GITHUB_WORKSPACE}/debug-via-reverse-proxy.sh
 
       - name: Repo sync
-        run: .repo/repo/repo sync -j8
         working-directory: /home/runner/repo_sync
+        run: |
+          tmux new-session -ds repo-sync .repo/repo/repo sync -j16
 
       - name: Print disk usage after repo sync
         working-directory: /home/runner/repo_sync
