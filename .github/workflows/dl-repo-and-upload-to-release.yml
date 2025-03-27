@@ -28,20 +28,32 @@ jobs:
       # - name: Checkout code (optional, if your workflow needs access to the current repo)
       #   uses: actions/checkout@v4
       
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: false
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
+      - name: Check Server Performance
+        run: |
+          echo "警告⚠"
+          echo "分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
+          echo -e "已知CPU型号(降序): 7763，8370C，8272CL，8171M，E5-2673\n"
+          echo "--------------------------CPU信息--------------------------"
+          echo "CPU物理数量: $(cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)"
+          echo "CPU核心数量: $(nproc)"
+          echo -e "CPU型号信息:$(cat /proc/cpuinfo | grep -m1 name | awk -F: '{print $2}')\n"
+          echo "--------------------------内存信息--------------------------"
+          echo "已安装内存详细信息:"
+          echo -e "$(sudo lshw -short -C memory | grep GiB)\n"
+          echo "--------------------------硬盘信息--------------------------"
+          echo "硬盘数量: $(ls /dev/sd* | grep -v [1-9] | wc -l)" && df -hT
+
+      # - name: Free disk space
+      #   uses: easimon/maximize-build-space@master
+      #   with:
+      #     build-mount-path: /workdir
+      #     root-reserve-mb: 10240
+      #     temp-reserve-mb: 2048
+      #     swap-size-mb: 4096
+
+      # - name: Print disk usage after freeing disk space
+      #   run: |
+      #     df -h
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -58,11 +70,11 @@ jobs:
         working-directory: ${{ github.workspace }} # Start from the workflow workspace
 
       - name: Repo init
-        run: repo init -u https://github.com/OnePlusOSS/kernel_manifest -b oneplus/sm8650 -m oneplus12_u.xml
+        run: repo-2 init -u https://github.com/OnePlusOSS/kernel_manifest -b oneplus/sm8650 -m oneplus12_u.xml
         working-directory: /home/runner/repo_sync
 
       - name: Repo sync
-        run: repo sync -j8
+        run: repo-2 sync -j8
         working-directory: /home/runner/repo_sync
 
       # - name: Create archive
