@@ -8,7 +8,7 @@ then
     done
 fi
 mkdir -p ~/.ssh
-echo "$MY_SSH_PUB_KEY" >> ~/.ssh/authorized_keys
+# echo "$MY_SSH_PUB_KEY" >> ~/.ssh/authorized_keys
 echo "Starting tunnel..."
 env > ~/current_env.txt
 cpolar authtoken "$MY_REVERSE_PROXY_TOKEN"
