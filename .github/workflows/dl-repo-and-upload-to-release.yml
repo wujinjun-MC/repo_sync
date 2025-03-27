@@ -48,6 +48,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout code (optional, if your workflow needs access to the current repo)
         uses: actions/checkout@v4
